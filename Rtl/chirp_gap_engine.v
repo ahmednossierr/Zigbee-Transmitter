@@ -1,47 +1,3 @@
-// =============================================================================
-// chirp_gap_engine
-// -----------------------------------------------------------------------------
-// Implements the part of "CSK Generation and Modulation" (spec 6.5a.4,
-// chirpModulation.m) that the original RTL was missing:
-//
-//   - Each DQPSK symbol (dqpsk_out_phase) must be held CONSTANT for the full
-//     Tsub = 38-sample duration of one subchirp (chirpModulation.m:
-//     "modulationSymbols = repmat(QPSKsymbols(groupIndex), Tsub, 1)").
-//   - 4 successive DQPSK symbols (Sn..Sn+3) jointly modulate ONE 152-sample
-//     Chirp Sequence (4 subchirps x 38 samples, k=0..3).
-//   - Each Chirp Sequence is followed by a literal, zero-valued time gap of
-//     Teven or Todd samples (Table 42), alternating starting from Teven on
-//     the first (group 0, "even") group.
-//   - Chirp index m selects the (Teven,Todd) row of Table 42. m is a single
-//     FIXED design parameter for the whole transmitter (chirpSequenceGenerator
-//     is called once, with one fixed chirpIndex, in runMe.m) -- it is not
-//     recomputed per symbol/group. This RTL fixes m=1 (Teven=10, Todd=70),
-//     matching the golden reference files bit-exactly (confirmed by exact
-//     line-count match against all 4 expected_Tx_*_len*.txt files: the total
-//     sample count for N groups of 4 symbols is exactly
-//     N*152 + evenGroups*10 + oddGroups*70, which line up with 13824/29184/
-//     62976/136704 for len=5/20/55/125 -- see conventions-and-bugs memory).
-//     Confidence: HIGH (m fixed by spec/MATLAB structure) that m is
-//     constant; HIGH (exact line-count match, 4/4 files) that m=1 specifically.
-//
-// The rest of the pipeline (RAM..dqpsk_encoder) runs essentially 1 new
-// DQPSK symbol per clock cycle once flowing -- much FASTER than this engine
-// consumes them (1 new symbol needed only every 38 chip-cycles, plus a
-// 10/70-cycle gap every 4th symbol). A phase FIFO decouples the two: the
-// front end can run to completion quickly and simply waits in the FIFO,
-// while this engine drains it at the correct spec-accurate chip rate. This
-// keeps the change fully confined to the CSK/DQCSK boundary -- none of the
-// already-verified upstream blocks (RAM, zero_padding, demux, dmux_2_mapper,
-// symbol_mapper, symbol_buffer, interleaver, PPDU, qpsk_mapper,
-// dqpsk_encoder) needed to change to add real back-pressure.
-//
-// PHASE_FIFO_DEPTH / SYM_CNT_W are sized for the IEEE 802.15.4a spec's
-// 127-byte max PSDU (worst case: 96 + 43*64 = 2848 DQPSK symbols). This is
-// a documented restriction: a payloadLength beyond the spec's own 127-byte
-// PSDU limit is out of scope and not guarded against here (see design
-// restrictions in the final summary).
-// =============================================================================
-
 module chirp_gap_engine #(
     parameter TSUB             = 38,    // samples per subchirp (spec 6.5a.4.3, Tsub)
     parameter NSUB              = 4,     // subchirps per chirp sequence
@@ -122,7 +78,7 @@ module chirp_gap_engine #(
 
     // ---- phase FIFO pointers / occupancy ----
     integer p;
-    always @(posedge clk or posedge reset) begin
+    always @(posedge clk ) begin
         if (reset) begin
             wr_ptr     <= {PFP_AW{1'b0}};
             rd_ptr     <= {PFP_AW{1'b0}};
@@ -148,7 +104,7 @@ module chirp_gap_engine #(
     end
 
     // ---- chip-rate state machine ----
-    always @(posedge clk or posedge reset) begin
+    always @(posedge clk ) begin
         if (reset) begin
             state            <= ACTIVE;
             sample_cnt       <= 6'd0;
