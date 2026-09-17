@@ -24,7 +24,7 @@ module block_ready_ctrl (
                             (i_next >= total_blocks) &&
                             (q_next >= total_blocks);
 
-    always @(posedge clk or posedge reset) begin
+    always @(posedge clk ) begin
         if (reset) begin
             i_blk_cnt    <= 8'd0;
             q_blk_cnt    <= 8'd0;
