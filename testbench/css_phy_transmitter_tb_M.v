@@ -40,22 +40,7 @@ begin
 end
 endtask
 
-// -------------------------------------------------------------------------
-// Self-Checking Task for a Test Case
-// -------------------------------------------------------------------------
-//
-// CHIP-RATE CHECK -- one golden line per RTL output sample, in order.
-//
-// expected_Tx_real/imag_len*.txt are MATLAB's full chip-rate output: every
-// group of 4 DQPSK symbols is expanded into 4 held-phase subchirps of 38
-// samples each (152 active samples), followed by a literal zero-valued gap
-// of Teven or Todd samples (Table 42), alternating even/odd group by group.
-// css_phy_transmitter.v now implements that expansion in chirp_gap_engine.v
-// (see that file for the full design rationale), so DUT.tx_valid pulses
-// once per CHIP SAMPLE (not once per DQPSK symbol as it used to), in the
-// same order as the golden files. A plain 1:1 comparison is therefore the
-// correct and sufficient check -- no decimation/skipping needed.
-task run_testcase(input [7:0] len);
+
     integer fd_r, fd_i;
     integer status_r, status_i;
     reg [5:0] exp_r, exp_i;
