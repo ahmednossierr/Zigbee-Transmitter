@@ -1,5 +1,3 @@
-`timescale 1ns/1ps
-
 module css_phy_transmitter_tb_M();
 
 reg clk;
