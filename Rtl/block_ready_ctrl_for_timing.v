@@ -1,23 +1,22 @@
 module block_ready_ctrl (
     input  wire       clk,
     input  wire       reset,
-    input  wire       start_tx,      // pulses once to kick off a new packet's processing
+    input  wire       start_tx,      
     input  wire       padding_done,  // pulses once total_bits becomes valid
     input  wire [10:0] total_bits,
-    input  wire       i_block_valid, // pulses once per completed I block (symbol_buffer+interleaver)
-    input  wire       q_block_valid, // pulses once per completed Q block
+    input  wire       i_block_valid, 
+    input  wire       q_block_valid, /
     output reg        tx_start       // pulses exactly once, when BOTH paths have delivered
-                                      // their last block -- this is what should drive
-                                      // PPDU.start / dqpsk_encoder.pkt_start instead of
-                                      // start_tx, to get non-pipelined operation
+                                     
+                                      
+                                      
 );
 
     reg [7:0] i_blk_cnt, q_blk_cnt;
     reg [7:0] total_blocks;
     reg       fired;
 
-    // include this cycle's increment(s) so the comparison fires on the exact
-    // cycle the last block arrives, not one cycle late
+  
     wire [7:0] i_next = i_blk_cnt + i_block_valid;
     wire [7:0] q_next = q_blk_cnt + q_block_valid;
     wire       all_ready = (total_blocks != 0) &&
