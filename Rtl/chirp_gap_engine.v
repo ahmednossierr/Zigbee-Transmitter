@@ -34,10 +34,10 @@ module chirp_gap_engine #(
     wire push       = phase_valid_in && !fifo_full;
     wire [2:0] fifo_rd_data = fifo_mem[rd_ptr];
 
-    // synthesis translate_off
+   
     always @(posedge clk) begin
         if (!reset && phase_valid_in && fifo_full)
-            $display("%0t: WARNING chirp_gap_engine: phase FIFO overflow, symbol dropped (payload exceeds the 127-byte spec max this engine is sized for)", $time);
+            $display("%0t: WARNING chirp_gap_engine: phase FIFO overflow,)", $time);
     end
     // synthesis translate_on
 
