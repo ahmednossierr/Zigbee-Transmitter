@@ -216,13 +216,7 @@ wire [2:0] dqpsk_out_phase;
     );
 
 
-// ---------------------------------------------------------------------
-// Chirp/gap chip-rate engine (spec 6.5a.4 subchirp hold + Table 42 gap
-// timing -- see chirp_gap_engine.v for the full design rationale).
-// Replaces the old free-running CSK_generator + a hand-tuned 2-cycle
-// reset delay: chirp_gap_engine's own phase-FIFO "stall" naturally waits
-// for the first real DQPSK symbol instead of assuming a fixed latency.
-// ---------------------------------------------------------------------
+
 localparam PRE_PLUS_SFD  = 12'd96; // 80 (preamble) + 16 (SFD), same as PPDU.v
 localparam SYM_CNT_W     = 12;
 
