@@ -66,7 +66,7 @@ begin
     fd_i = $fopen(file_imag, "r");
 
     if (fd_r == 0 || fd_i == 0) begin
-        $display("ERROR: Could not open expected files for length %0d. Make sure MATLAB generated them!", len);
+        $display("ERROR: Could not open expected files for length %0d.", len);
     end else begin
         errors = 0;
         samples = 0;
