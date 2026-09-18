@@ -64,38 +64,13 @@ module PPDU (
 
     assign total_blocks = total_bits / 24;
 
-    // ------------------------------------------------------------------
-    // FIX 1 (the hang): push and pop are decided ONCE, combinationally,
-    // and fifo_count is updated from a single case statement below.
-    // The original code had two separate non-blocking assignments to
-    // fifo_count (one in the unconditional push block, one inside the
-    // WAIT branch). If both fired on the same clock edge, only the
-    // textually-last one took effect and the other's contribution to
-    // fifo_count was silently lost -- fifo_head/fifo_tail stayed correct
-    // but fifo_count under-counted, and WAIT would then wait forever on
-    // "fifo_count > 0" for data that was actually already sitting in
-    // the array. That is the exact failure mode reproduced during
-    // debugging (fifo_head=2, fifo_tail=3, fifo_count=0 -> stuck).
-    // ------------------------------------------------------------------
+   
     wire fifo_full     = (fifo_count == FIFO_DEPTH);
     wire pop_req       = (state == WAIT) && (fifo_count > 0);
     wire push_req_raw  = i_path_valid && q_path_valid;
-    // A push landing on the same cycle as a pop is fine (net count is
-    // unchanged, there's room because a slot is being freed). A push
-    // that arrives while genuinely full, with no pop to free a slot,
-    // is dropped instead of silently overwriting an unread entry.
+   
     wire push_req      = push_req_raw && !(fifo_full && !pop_req);
 
-    // ------------------------------------------------------------------
-    // FIX 2 (visibility, not a functional change): the design assumes
-    // i_path_valid and q_path_valid always strobe on the exact same
-    // clock edge. That assumption lives outside this module (in the
-    // two symbol_buffer instances feeding it). If it's ever violated,
-    // a whole block silently disappears with no error. These checks
-    // turn that into a visible simulation message instead of a silent
-    // hang, and are stripped for synthesis.
-    // ------------------------------------------------------------------
-    // synthesis translate_off
     always @(posedge clk) begin
         if (!reset && (i_path_valid !== q_path_valid))
             $display("%0t: WARNING PPDU: i_path_valid(%b) != q_path_valid(%b) -- a block will be dropped",
@@ -140,16 +115,7 @@ module PPDU (
             case (state)
             IDLE: begin
                 ppdu_valid        <= 1'b0;
-                // NOTE: fifo_head/fifo_tail/fifo_count are deliberately NOT
-                // cleared here. They're only cleared on a real `reset`.
-                // Real blocks can legitimately arrive (and get pushed by
-                // the push_req logic above) while PPDU is still sitting in
-                // IDLE waiting for `start` -- clearing them here every
-                // cycle would silently discard that data, including the
-                // very block that arrives on the same cycle `start` fires.
-                // By the time a transmission legitimately finishes
-                // (DONE_STATE), all pushed blocks have already been
-                // popped, so fifo_count is naturally back to 0 anyway.
+               
                 blocks_sent_count <= 8'd0;
                 if (start) begin
                     symbol_index <= 7'd0;
