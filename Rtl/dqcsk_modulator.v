@@ -11,19 +11,7 @@ module dqcsk_modulator (
     output reg  signed [7:0] tx_imag
 );
 
-    // sn_phase can only  be 1, 3, 5, or 7).
-    //   Sn * (csk_real + j*csk_imag)  , Sn = Sn_real + Sn_imag
-    // = (Sn_real*csk_real - Sn_imag*csk_imag) + j*(Sn_real*csk_imag + Sn_imag*csk_real)
-
-    // csk_real/csk_imag are each signed [5:0] (range -32..31). Their sum or
-    // difference needs up to 7 bits (range -63..62) and does NOT fit back
-    // into the transmitted 6-bit sample without clipping. The golden MATLAB
-    // reference saturates to the signed 6-bit range [-32,31] here (verified
-    // bit-exact against expected_Tx_real/imag_len*.txt across all 80
-    // preamble samples once this clamp is applied) -- without it, any
-    // magnitude above 31 silently wraps instead of clipping, which is what
-    // was causing mismatches starting wherever the sum first exceeded the
-    // 6-bit range.
+   
     function signed [7:0] sat6;
         input signed [7:0] val;
         begin
