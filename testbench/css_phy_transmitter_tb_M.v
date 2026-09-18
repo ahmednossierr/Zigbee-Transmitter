@@ -84,16 +84,16 @@ begin
             @(posedge clk);
             #1; // Sample shortly after clock edge
 
-            if (DUT.tx_valid) begin // Secretly tap into internal tx_valid wire
+            if (DUT.tx_valid) begin 
                 status_r = $fscanf(fd_r, "%b\n", exp_r);
                 status_i = $fscanf(fd_i, "%b\n", exp_i);
 
                 if (status_r != 1 || status_i != 1) begin
                     $display("ERROR: Reached end of expected file prematurely at sample %0d", samples);
                 end else begin
-                    // Compare outputs. Since Tx is 8-bit sign extended, we check the lower 6 bits
+                    
                     if (Tx_real[5:0] !== exp_r || Tx_imag[5:0] !== exp_i) begin
-                        if (errors < 10) begin // Print only first 10 errors to avoid spam
+                        if (errors < 10) begin 
                             $display("  MISMATCH at sample %0d: Expected Real=%b Imag=%b | Got Real=%b Imag=%b",
                                      samples, exp_r, exp_i, Tx_real[5:0], Tx_imag[5:0]);
                         end
