@@ -25,16 +25,7 @@ module PPDU (
     localparam PRE_LEN    = 80;
     localparam PRE_VAL    = 1'b1;
     localparam SFD_LEN    = 16;
-    // FIFO_DEPTH was 8, sized for small payloads only. The front end
-    // (RAM..symbol_buffer) produces a new 64-bit I/Q block every few
-    // cycles with no back-pressure, while this FSM only drains one block
-    // every 64 (SEND) + 1 (WAIT) cycles. For payloads needing more than 8
-    // blocks in flight (>= 55 bytes here), the old depth silently dropped
-    // blocks (confirmed by the "FIFO overflow, incoming block dropped"
-    // warning firing for len=55/125). 64 comfortably covers the IEEE
-    // 802.15.4a spec's 127-byte max PSDU (total_bits/24 maxes out at 43
-    // blocks there), so the front end can run to completion and simply
-    // queue up without ever overflowing.
+
     localparam FIFO_DEPTH = 64;
     localparam FIFO_AW    = 6; // $clog2(FIFO_DEPTH)
 
